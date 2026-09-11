@@ -6,23 +6,25 @@
  * - Se duas pessoas pedirem o mesmo horário ao mesmo tempo, o banco segura a segunda
  *   (constraint appointments_no_overlap), e aqui isso vira um erro amigável
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
+ * - v1.1.0 (2026-09-11): Tenta de novo quando o Postgres acusa deadlock entre marcações simultâneas
  */
 
 import { env } from "../../config/env.js"
 import { prisma } from "../../config/prisma.js"
+import { isDeadlock, isOverlapViolation } from "../../utils/databaseErrors.js"
 import { getZonedDate } from "../../utils/timezone.js"
 import { ListAvailableSlotsService } from "../scheduling/ListAvailableSlotsService.js"
-import { APPOINTMENT_SELECT, presentAppointment } from "./appointmentPresenter.js"
+import { APPOINTMENT_SELECT, presentAppointment, type AppointmentRecord } from "./appointmentPresenter.js"
 
 export const SLOT_UNAVAILABLE = "Horário indisponível"
 export const SLOT_TAKEN = "Horário ocupado por outro agendamento"
 
-// Nome da constraint criada na migration: é por ele que a gente reconhece o erro
-const NO_OVERLAP_CONSTRAINT = "appointments_no_overlap"
+// Quantas vezes tenta salvar quando dá deadlock (depois disso, alguém ficou com o horário)
+const MAX_SAVE_ATTEMPTS = 3
 
 // O que a gente precisa pra marcar:
 interface CreateAppointmentRequest {
@@ -78,21 +80,30 @@ export class CreateAppointmentService {
   }
 
   // Entre a checagem e o insert, outra requisição pode ter pego o horário: aí quem barra é o banco
-  private async saveAppointment(data: {
-    client_id: string
-    provider_id: string
-    service_id: string
-    starts_at: Date
-    ends_at: Date
-    price_cents: number
-    notes?: string
-  }) {
+  private async saveAppointment(
+    data: {
+      client_id: string
+      provider_id: string
+      service_id: string
+      starts_at: Date
+      ends_at: Date
+      price_cents: number
+      notes?: string
+    },
+    attempt = 1
+  ): Promise<AppointmentRecord> {
     try {
       return await prisma.appointment.create({ data, select: APPOINTMENT_SELECT })
     } catch (error) {
-      if (error instanceof Error && error.message.includes(NO_OVERLAP_CONSTRAINT)) {
-        throw new Error(SLOT_TAKEN)
+      if (isOverlapViolation(error)) throw new Error(SLOT_TAKEN)
+
+      // Inserts simultâneos na mesma constraint podem travar um no outro, e o Postgres derruba um deles.
+      // Tentando de novo, ele esbarra na constraint (SLOT_TAKEN) ou passa, se o outro não foi adiante.
+      if (isDeadlock(error)) {
+        if (attempt >= MAX_SAVE_ATTEMPTS) throw new Error(SLOT_TAKEN)
+        return this.saveAppointment(data, attempt + 1)
       }
+
       throw error
     }
   }

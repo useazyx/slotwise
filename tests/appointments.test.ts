@@ -84,17 +84,18 @@ describe("booking an appointment", () => {
     expect(times).toContain("10:30")
   })
 
-  it("lets only one of two simultaneous requests take the same slot", async () => {
+  it("lets only one of five simultaneous requests take the same slot", async () => {
     const date = nextWeek()
     const { provider, service } = await setup(date)
-    const ana = await createUserAndLogin(app, { role: "CLIENT" })
-    const bruno = await createUserAndLogin(app, { role: "CLIENT" })
+    const clients = await Promise.all(
+      Array.from({ length: 5 }, () => createUserAndLogin(app, { role: "CLIENT" }))
+    )
     const payload = { provider_id: provider.user.id, service_id: service.id, starts_at: at(date, "11:00") }
 
-    const responses = await Promise.all([book(ana.token, payload), book(bruno.token, payload)])
+    const responses = await Promise.all(clients.map((client) => book(client.token, payload)))
 
     const statuses = responses.map((response) => response.statusCode).sort()
-    expect(statuses).toEqual([201, 409])
+    expect(statuses).toEqual([201, 409, 409, 409, 409])
     expect(await prisma.appointment.count()).toBe(1)
   })
 
