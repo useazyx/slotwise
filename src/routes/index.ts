@@ -4,14 +4,16 @@
  * - Registrar todos os grupos de rota num lugar só (tipo o índice de um livro)
  * - Ter a rota de saúde, que serve pra saber se a API tá de pé
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial com o /health
+ * - v1.1.0 (2026-09-11): Rotas de autenticação em /auth
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod"
 import { z } from "zod"
+import { authRoutes } from "./authRoutes.js"
 
 const HEALTH_RESPONSE_SCHEMA = z.object({
   status: z.literal("ok"),
@@ -30,4 +32,6 @@ export const routes: FastifyPluginAsyncZod = async (app) => {
     },
     async () => ({ status: "ok" as const })
   )
+
+  await app.register(authRoutes, { prefix: "/auth" })
 }
