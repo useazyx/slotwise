@@ -12,10 +12,12 @@
  * - v1.2.0 (2026-09-11): Serviços do prestador em /services
  * - v1.3.0 (2026-09-11): Semana de atendimento em /availability
  * - v1.4.0 (2026-09-11): Vitrine pública em /providers
+ * - v1.5.0 (2026-09-11): Agendamentos em /appointments
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod"
 import { z } from "zod"
+import { appointmentRoutes } from "./appointmentRoutes.js"
 import { authRoutes } from "./authRoutes.js"
 import { availabilityRoutes } from "./availabilityRoutes.js"
 import { providerRoutes } from "./providerRoutes.js"
@@ -43,4 +45,5 @@ export const routes: FastifyPluginAsyncZod = async (app) => {
   await app.register(serviceRoutes, { prefix: "/services" })
   await app.register(availabilityRoutes, { prefix: "/availability" })
   await app.register(providerRoutes, { prefix: "/providers" })
+  await app.register(appointmentRoutes, { prefix: "/appointments" })
 }
