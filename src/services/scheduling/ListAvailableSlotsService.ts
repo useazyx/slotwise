@@ -5,10 +5,11 @@
  * - Tirar o que já está ocupado por outro agendamento e o que já passou (ou está em cima da hora)
  * - Tudo no fuso do negócio: "09:00" é 09:00 em São Paulo, não no relógio do servidor
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
+ * - v1.1.0 (2026-09-11): ignore_appointment_id, pra remarcação não brigar com o próprio horário antigo
  */
 
 import {
@@ -29,6 +30,8 @@ interface ListAvailableSlotsRequest {
   provider_id: string
   service_id: string
   date: string
+  // Na remarcação, o agendamento que vai ser trocado não conta como ocupado
+  ignore_appointment_id?: string
 }
 
 // Um intervalo de tempo já em instantes UTC
@@ -38,7 +41,7 @@ interface TimeRange {
 }
 
 export class ListAvailableSlotsService {
-  async execute({ provider_id, service_id, date }: ListAvailableSlotsRequest) {
+  async execute({ provider_id, service_id, date, ignore_appointment_id }: ListAvailableSlotsRequest) {
     const timeZone = env.APP_TIMEZONE
 
     this.validateDateWindow(date, timeZone)
@@ -51,7 +54,7 @@ export class ListAvailableSlotsService {
     // Busca em paralelo: as faixas do dia e o que já está marcado
     const [ranges, busy] = await Promise.all([
       this.findRangesForWeekday(provider_id, getWeekday(date)),
-      this.findBusyRanges(provider_id, date, timeZone),
+      this.findBusyRanges(provider_id, date, timeZone, ignore_appointment_id),
     ])
 
     const candidates = this.buildCandidates(ranges, date, service.duration_minutes, timeZone)
@@ -101,7 +104,12 @@ export class ListAvailableSlotsService {
   }
 
   // Tudo que está marcado e encosta naquele dia (inclusive o que começou na véspera e invade)
-  private async findBusyRanges(providerId: string, date: string, timeZone: string): Promise<TimeRange[]> {
+  private async findBusyRanges(
+    providerId: string,
+    date: string,
+    timeZone: string,
+    ignoreAppointmentId?: string
+  ): Promise<TimeRange[]> {
     const dayStart = zonedDateTimeToUtc(date, 0, timeZone)
     const dayEnd = zonedDateTimeToUtc(addDaysToDate(date, 1), 0, timeZone)
 
@@ -109,6 +117,7 @@ export class ListAvailableSlotsService {
       where: {
         provider_id: providerId,
         status: "SCHEDULED",
+        ...(ignoreAppointmentId && { id: { not: ignoreAppointmentId } }),
         starts_at: { lt: dayEnd },
         ends_at: { gt: dayStart },
       },
