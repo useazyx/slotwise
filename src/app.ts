@@ -5,17 +5,25 @@
  * - Plugar o tratamento de erro e as rotas
  * - Ficar separado do server.ts pra os testes conseguirem usar a API sem subir servidor
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.3.0
+ * Versão: 1.4.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): Plugin de autenticação (JWT)
  * - v1.2.0 (2026-09-11): Fila de jobs e desconexão do banco ao desligar
  * - v1.3.0 (2026-09-11): helmet, cors e rate limit (opção rateLimit pros testes)
+ * - v1.4.0 (2026-09-11): Documentação OpenAPI gerada dos schemas, com a tela em /docs
  */
 
+import swagger from "@fastify/swagger"
+import swaggerUi from "@fastify/swagger-ui"
 import Fastify from "fastify"
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod"
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from "fastify-type-provider-zod"
 import { env } from "./config/env.js"
 import { prisma } from "./config/prisma.js"
 import { errorHandler } from "./errors/errorHandler.js"
@@ -23,6 +31,8 @@ import { authPlugin } from "./plugins/auth.js"
 import { queuePlugin } from "./plugins/queue.js"
 import { securityPlugin } from "./plugins/security.js"
 import { routes } from "./routes/index.js"
+
+export const DOCS_ROUTE = "/docs"
 
 // O que dá pra ligar/desligar na hora de montar a API
 interface BuildAppOptions {
@@ -60,6 +70,23 @@ export async function buildApp({ rateLimit = env.NODE_ENV !== "test" }: BuildApp
   await app.register(securityPlugin, { rateLimit })
   await app.register(authPlugin)
   await app.register(queuePlugin)
+
+  // A documentação sai dos mesmos schemas Zod que validam as rotas (não tem como ficar desatualizada)
+  await app.register(swagger, {
+    openapi: {
+      info: {
+        title: "Pontual API",
+        description: "Agendamento com horários livres, proteção contra marcação dupla e lembretes em fila",
+        version: "1.0.0",
+      },
+      components: {
+        securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } },
+      },
+    },
+    transform: jsonSchemaTransform,
+  })
+  await app.register(swaggerUi, { routePrefix: DOCS_ROUTE })
+
   await app.register(routes)
 
   // Quando a API desliga, fecha a conexão com o banco também
