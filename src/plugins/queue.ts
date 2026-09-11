@@ -6,14 +6,17 @@
  * - Parar a fila direitinho quando a API desliga (sem largar job pela metade)
  * - Por que fila e não setTimeout? Se o servidor reiniciar, o setTimeout some; o job no banco não
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
+ * - v1.1.0 (2026-09-11): Liga os workers quando QUEUE_WORKERS_ENABLED está ligado
  */
 
 import fp from "fastify-plugin"
+import { env } from "../config/env.js"
 import { QUEUE_NAMES, queue } from "../config/queue.js"
+import { registerWorkers } from "../jobs/index.js"
 
 // Lembrete tenta de novo até 5 vezes, esperando cada vez mais (1 min, 2 min, 4 min...)
 const QUEUE_SETTINGS = [
@@ -27,6 +30,8 @@ export const queuePlugin = fp(async (app) => {
 
   await queue.start()
   await ensureQueues()
+
+  if (env.QUEUE_WORKERS_ENABLED) await registerWorkers()
 
   app.addHook("onClose", async () => {
     await queue.stop({ graceful: true, timeout: 10_000 })

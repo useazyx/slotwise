@@ -4,11 +4,13 @@
  * - Conferir o horário novo na lista de livres, sem contar o próprio horário antigo como ocupado
  * - Cancelar o antigo e criar o novo na mesma transação (ou troca tudo, ou nada muda)
  * - Manter o preço combinado na primeira marcação, mesmo que o serviço tenha ficado mais caro
+ * - Levar os lembretes pro horário novo
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
+ * - v1.1.0 (2026-09-11): Cancela os lembretes do horário antigo e agenda os do novo
  */
 
 import { CLIENT_CANCEL_NOTICE_MINUTES } from "../../config/bookingRules.js"
@@ -16,6 +18,8 @@ import { env } from "../../config/env.js"
 import { prisma } from "../../config/prisma.js"
 import { isDeadlock, isOverlapViolation } from "../../utils/databaseErrors.js"
 import { getZonedDate } from "../../utils/timezone.js"
+import { CancelRemindersService } from "../reminders/CancelRemindersService.js"
+import { ScheduleRemindersService } from "../reminders/ScheduleRemindersService.js"
 import { ListAvailableSlotsService } from "../scheduling/ListAvailableSlotsService.js"
 import { APPOINTMENT_SELECT, presentAppointment, type AppointmentRecord } from "./appointmentPresenter.js"
 import { APPOINTMENT_NOT_ACTIVE, TOO_LATE_TO_CHANGE } from "./CancelAppointmentService.js"
@@ -47,7 +51,22 @@ export class RescheduleAppointmentService {
 
     const replacement = await this.swapAppointments(current, newStart)
 
+    await this.moveReminders(current.id, replacement.id, replacement.starts_at)
+
     return presentAppointment(replacement)
+  }
+
+  // Lembrete do horário antigo não pode sair; o novo horário ganha os dele
+  private async moveReminders(oldAppointmentId: string, newAppointmentId: string, newStart: Date) {
+    const cancelRemindersService = new CancelRemindersService()
+    await cancelRemindersService.execute(oldAppointmentId)
+
+    try {
+      const scheduleRemindersService = new ScheduleRemindersService()
+      await scheduleRemindersService.execute({ appointment_id: newAppointmentId, starts_at: newStart })
+    } catch (error) {
+      console.error("❌ Deu ruim agendando os lembretes do horário novo:", error)
+    }
   }
 
   private async findClientAppointment(appointmentId: string, clientId: string) {

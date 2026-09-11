@@ -6,17 +6,19 @@
  * - Se duas pessoas pedirem o mesmo horário ao mesmo tempo, o banco segura a segunda
  *   (constraint appointments_no_overlap), e aqui isso vira um erro amigável
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.1.0
+ * Versão: 1.2.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): Tenta de novo quando o Postgres acusa deadlock entre marcações simultâneas
+ * - v1.2.0 (2026-09-11): Agenda os lembretes de 24 horas e 1 hora antes
  */
 
 import { env } from "../../config/env.js"
 import { prisma } from "../../config/prisma.js"
 import { isDeadlock, isOverlapViolation } from "../../utils/databaseErrors.js"
 import { getZonedDate } from "../../utils/timezone.js"
+import { ScheduleRemindersService } from "../reminders/ScheduleRemindersService.js"
 import { ListAvailableSlotsService } from "../scheduling/ListAvailableSlotsService.js"
 import { APPOINTMENT_SELECT, presentAppointment, type AppointmentRecord } from "./appointmentPresenter.js"
 
@@ -55,7 +57,19 @@ export class CreateAppointmentService {
       notes: data.notes,
     })
 
+    await this.scheduleReminders(appointment.id, appointment.starts_at)
+
     return presentAppointment(appointment)
+  }
+
+  // O horário já está garantido; se a fila falhar, a marcação continua valendo e o erro vai pro log
+  private async scheduleReminders(appointmentId: string, startsAt: Date) {
+    try {
+      const scheduleRemindersService = new ScheduleRemindersService()
+      await scheduleRemindersService.execute({ appointment_id: appointmentId, starts_at: startsAt })
+    } catch (error) {
+      console.error("❌ Deu ruim agendando os lembretes:", error)
+    }
   }
 
   private async ensureSlotIsFree(providerId: string, serviceId: string, startsAt: Date) {
