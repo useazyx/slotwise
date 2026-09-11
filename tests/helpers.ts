@@ -5,10 +5,11 @@
  * - Limpar o banco entre um teste e outro
  * - Criar conta e já pegar o token, pra não repetir isso em todo arquivo
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
+ * - v1.1.0 (2026-09-11): createTestApp aceita as opções do buildApp (tipo ligar o rate limit)
  */
 
 import { randomUUID } from "node:crypto"
@@ -17,8 +18,8 @@ import { prisma } from "../src/config/prisma.js"
 
 export type TestApp = Awaited<ReturnType<typeof buildApp>>
 
-export async function createTestApp() {
-  const app = await buildApp()
+export async function createTestApp(options: Parameters<typeof buildApp>[0] = {}) {
+  const app = await buildApp(options)
   await app.ready()
   return app
 }

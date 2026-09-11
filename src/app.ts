@@ -5,12 +5,13 @@
  * - Plugar o tratamento de erro e as rotas
  * - Ficar separado do server.ts pra os testes conseguirem usar a API sem subir servidor
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.2.0
+ * Versão: 1.3.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): Plugin de autenticação (JWT)
  * - v1.2.0 (2026-09-11): Fila de jobs e desconexão do banco ao desligar
+ * - v1.3.0 (2026-09-11): helmet, cors e rate limit (opção rateLimit pros testes)
  */
 
 import Fastify from "fastify"
@@ -20,7 +21,14 @@ import { prisma } from "./config/prisma.js"
 import { errorHandler } from "./errors/errorHandler.js"
 import { authPlugin } from "./plugins/auth.js"
 import { queuePlugin } from "./plugins/queue.js"
+import { securityPlugin } from "./plugins/security.js"
 import { routes } from "./routes/index.js"
+
+// O que dá pra ligar/desligar na hora de montar a API
+interface BuildAppOptions {
+  // Por padrão só fica desligado nos testes
+  rateLimit?: boolean
+}
 
 // Log bonitinho em desenvolvimento, JSON em produção e silêncio nos testes
 const getLoggerConfig = () => {
@@ -31,7 +39,7 @@ const getLoggerConfig = () => {
   return true
 }
 
-export async function buildApp() {
+export async function buildApp({ rateLimit = env.NODE_ENV !== "test" }: BuildAppOptions = {}) {
   const app = Fastify({ logger: getLoggerConfig() }).withTypeProvider<ZodTypeProvider>()
 
   // O Zod valida o que entra e formata o que sai
@@ -48,6 +56,8 @@ export async function buildApp() {
     })
   })
 
+  // Segurança antes das rotas, senão o rate limit não enxerga elas
+  await app.register(securityPlugin, { rateLimit })
   await app.register(authPlugin)
   await app.register(queuePlugin)
   await app.register(routes)

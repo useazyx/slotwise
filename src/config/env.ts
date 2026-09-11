@@ -4,11 +4,12 @@
  * - Garantir que o .env tem tudo que a API precisa (se faltar algo, nem sobe)
  * - Entregar as variáveis já convertidas (porta como número etc.) pro resto do código
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.1.0
+ * Versão: 1.2.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): QUEUE_WORKERS_ENABLED pra ligar/desligar os workers da fila
+ * - v1.2.0 (2026-09-11): CORS_ORIGINS
  */
 
 import { config } from "dotenv"
@@ -28,6 +29,11 @@ const ENV_SCHEMA = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
   // Nos testes fica desligado: a fila aceita job, mas ninguém processa (os testes chamam o worker direto)
   QUEUE_WORKERS_ENABLED: z.stringbool().default(true),
+  // "*" libera qualquer site; em produção, lista separada por vírgula (https://app.com,https://admin.app.com)
+  CORS_ORIGINS: z
+    .string()
+    .default("*")
+    .transform((value) => (value === "*" ? true : value.split(",").map((origin) => origin.trim()))),
 })
 
 const parsed = ENV_SCHEMA.safeParse(process.env)
