@@ -1,5 +1,12 @@
 // schema.prisma - O mapa do banco do Pontual
-// Os models entram a partir do passo 2 do roteiro.
+// # Pra que serve?
+// - Descrever quem usa (clientes e prestadores), o que é oferecido e quando dá pra atender
+// - Guardar os agendamentos e os lembretes que a fila vai disparar
+// Feito por: Arthur Roberto Weege Pontes
+// Versão: 1.0.0
+// Data: 2026-09-11
+// Alterações:
+// - v1.0.0 (2026-09-11): Primeira modelagem
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +15,122 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  PROVIDER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELED
+  DONE
+  NO_SHOW
+}
+
+enum ReminderKind {
+  DAY_BEFORE
+  HOUR_BEFORE
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  CANCELED
+  FAILED
+}
+
+// Todo mundo que entra na API: quem marca (CLIENT) e quem atende (PROVIDER)
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          UserRole @default(CLIENT)
+  created_at    DateTime @default(now()) @db.Timestamptz(3)
+  updated_at    DateTime @updatedAt @db.Timestamptz(3)
+
+  services              Service[]
+  availabilities        Availability[]
+  client_appointments   Appointment[] @relation("ClientAppointments")
+  provider_appointments Appointment[] @relation("ProviderAppointments")
+
+  @@map("users")
+}
+
+// O que o prestador oferece (corte de cabelo, consulta...). Preço em centavos pra não ter erro de arredondamento.
+model Service {
+  id               String   @id @default(uuid())
+  provider_id      String
+  name             String
+  description      String?
+  duration_minutes Int
+  price_cents      Int
+  active           Boolean  @default(true)
+  created_at       DateTime @default(now()) @db.Timestamptz(3)
+  updated_at       DateTime @updatedAt @db.Timestamptz(3)
+
+  provider     User          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@index([provider_id])
+  @@map("services")
+}
+
+// Uma faixa de atendimento da semana: weekday 0 (domingo) a 6 (sábado), horário em minutos desde a meia-noite
+model Availability {
+  id           String @id @default(uuid())
+  provider_id  String
+  weekday      Int
+  start_minute Int
+  end_minute   Int
+
+  provider User @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@index([provider_id, weekday])
+  @@map("availabilities")
+}
+
+// O horário marcado. Guarda uma cópia do preço, pra mudar o serviço depois não mexer no que já foi combinado.
+model Appointment {
+  id            String            @id @default(uuid())
+  client_id     String
+  provider_id   String
+  service_id    String
+  starts_at     DateTime          @db.Timestamptz(3)
+  ends_at       DateTime          @db.Timestamptz(3)
+  status        AppointmentStatus @default(SCHEDULED)
+  price_cents   Int
+  notes         String?
+  canceled_at   DateTime?         @db.Timestamptz(3)
+  cancel_reason String?
+  created_at    DateTime          @default(now()) @db.Timestamptz(3)
+  updated_at    DateTime          @updatedAt @db.Timestamptz(3)
+
+  client    User       @relation("ClientAppointments", fields: [client_id], references: [id])
+  provider  User       @relation("ProviderAppointments", fields: [provider_id], references: [id])
+  service   Service    @relation(fields: [service_id], references: [id])
+  reminders Reminder[]
+
+  @@index([provider_id, starts_at])
+  @@index([client_id, starts_at])
+  @@map("appointments")
+}
+
+// Cada lembrete que vai pra fila. O job_id é o id do job no pg-boss, pra dar pra cancelar depois.
+model Reminder {
+  id             String         @id @default(uuid())
+  appointment_id String
+  kind           ReminderKind
+  status         ReminderStatus @default(PENDING)
+  job_id         String?
+  scheduled_for  DateTime       @db.Timestamptz(3)
+  sent_at        DateTime?      @db.Timestamptz(3)
+  created_at     DateTime       @default(now()) @db.Timestamptz(3)
+
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@unique([appointment_id, kind])
+  @@map("reminders")
 }
