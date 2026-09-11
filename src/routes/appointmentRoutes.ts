@@ -3,13 +3,15 @@
  * # Pra que serve?
  * - Marcar e remarcar horário (só cliente)
  * - Ver a agenda, ver um agendamento e cancelar (cliente e prestador)
+ * - Registrar se o cliente veio ou faltou (só prestador)
  * - Tudo aqui passa pelo porteiro
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.1.0
+ * Versão: 1.2.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): Listagem, detalhe, cancelamento e remarcação
+ * - v1.2.0 (2026-09-11): Presença em /:id/attendance
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod"
@@ -17,6 +19,7 @@ import { CancelAppointmentController } from "../controllers/appointments/CancelA
 import { CreateAppointmentController } from "../controllers/appointments/CreateAppointmentController.js"
 import { GetAppointmentController } from "../controllers/appointments/GetAppointmentController.js"
 import { ListAppointmentsController } from "../controllers/appointments/ListAppointmentsController.js"
+import { MarkAttendanceController } from "../controllers/appointments/MarkAttendanceController.js"
 import { RescheduleAppointmentController } from "../controllers/appointments/RescheduleAppointmentController.js"
 import {
   APPOINTMENT_LIST_RESPONSE_SCHEMA,
@@ -24,6 +27,7 @@ import {
   CANCEL_APPOINTMENT_BODY_SCHEMA,
   CREATE_APPOINTMENT_BODY_SCHEMA,
   LIST_APPOINTMENTS_QUERY_SCHEMA,
+  MARK_ATTENDANCE_BODY_SCHEMA,
   RESCHEDULE_APPOINTMENT_BODY_SCHEMA,
 } from "../schemas/appointmentSchemas.js"
 import { ID_PARAMS_SCHEMA } from "../schemas/commonSchemas.js"
@@ -104,5 +108,21 @@ export const appointmentRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req, rep) => new RescheduleAppointmentController().handle(req, rep)
+  )
+
+  app.patch(
+    "/:id/attendance",
+    {
+      onRequest: [app.requireRole("PROVIDER")],
+      schema: {
+        tags: ["Appointments"],
+        summary: "Registra se o cliente veio (DONE) ou faltou (NO_SHOW)",
+        security: [{ bearerAuth: [] }],
+        params: ID_PARAMS_SCHEMA,
+        body: MARK_ATTENDANCE_BODY_SCHEMA,
+        response: { 200: APPOINTMENT_SCHEMA },
+      },
+    },
+    (req, rep) => new MarkAttendanceController().handle(req, rep)
   )
 }

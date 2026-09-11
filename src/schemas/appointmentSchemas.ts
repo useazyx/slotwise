@@ -2,14 +2,15 @@
  * appointmentSchemas.ts - O formato dos agendamentos
  * # Pra que serve?
  * - Validar o pedido de marcação (prestador, serviço e o instante exato do horário)
- * - Validar listagem com filtro, cancelamento e remarcação
+ * - Validar listagem com filtro, cancelamento, remarcação e presença
  * - Descrever como o agendamento sai nas respostas
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.1.0
+ * Versão: 1.2.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): Listagem paginada, cancelamento e remarcação
+ * - v1.2.0 (2026-09-11): Presença (DONE ou NO_SHOW)
  */
 
 import { z } from "zod"
@@ -61,6 +62,11 @@ export const RESCHEDULE_APPOINTMENT_BODY_SCHEMA = z.object({
   starts_at: STARTS_AT_SCHEMA,
 })
 
+// Como o atendimento terminou: veio (DONE) ou faltou (NO_SHOW)
+export const MARK_ATTENDANCE_BODY_SCHEMA = z.object({
+  status: z.enum(["DONE", "NO_SHOW"], "status precisa ser DONE ou NO_SHOW"),
+})
+
 export const APPOINTMENT_LIST_RESPONSE_SCHEMA = z.object({
   appointments: z.array(APPOINTMENT_SCHEMA),
   total: z.number().int(),
@@ -72,3 +78,4 @@ export type CreateAppointmentBody = z.infer<typeof CREATE_APPOINTMENT_BODY_SCHEM
 export type ListAppointmentsQuery = z.infer<typeof LIST_APPOINTMENTS_QUERY_SCHEMA>
 export type CancelAppointmentBody = z.infer<typeof CANCEL_APPOINTMENT_BODY_SCHEMA>
 export type RescheduleAppointmentBody = z.infer<typeof RESCHEDULE_APPOINTMENT_BODY_SCHEMA>
+export type MarkAttendanceBody = z.infer<typeof MARK_ATTENDANCE_BODY_SCHEMA>
