@@ -13,6 +13,7 @@ export default defineConfig({
       TEST_DATABASE_URL,
       JWT_SECRET: "test-secret-pontual",
       APP_TIMEZONE: "America/Sao_Paulo",
+      QUEUE_WORKERS_ENABLED: "false",
     },
     hookTimeout: 120_000,
     testTimeout: 30_000,

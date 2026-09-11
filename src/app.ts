@@ -5,18 +5,21 @@
  * - Plugar o tratamento de erro e as rotas
  * - Ficar separado do server.ts pra os testes conseguirem usar a API sem subir servidor
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.1.0
+ * Versão: 1.2.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Implementação inicial
  * - v1.1.0 (2026-09-11): Plugin de autenticação (JWT)
+ * - v1.2.0 (2026-09-11): Fila de jobs e desconexão do banco ao desligar
  */
 
 import Fastify from "fastify"
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod"
 import { env } from "./config/env.js"
+import { prisma } from "./config/prisma.js"
 import { errorHandler } from "./errors/errorHandler.js"
 import { authPlugin } from "./plugins/auth.js"
+import { queuePlugin } from "./plugins/queue.js"
 import { routes } from "./routes/index.js"
 
 // Log bonitinho em desenvolvimento, JSON em produção e silêncio nos testes
@@ -46,7 +49,13 @@ export async function buildApp() {
   })
 
   await app.register(authPlugin)
+  await app.register(queuePlugin)
   await app.register(routes)
+
+  // Quando a API desliga, fecha a conexão com o banco também
+  app.addHook("onClose", async () => {
+    await prisma.$disconnect()
+  })
 
   return app
 }
