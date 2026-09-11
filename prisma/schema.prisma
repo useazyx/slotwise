@@ -1,0 +1,11 @@
+// schema.prisma - O mapa do banco do Pontual
+// Os models entram a partir do passo 2 do roteiro.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
