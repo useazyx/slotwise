@@ -6,10 +6,11 @@
  * - Aplicar as migrações pendentes e rodar o seed, quando eles já existirem
  * - Assim o `npm run dev` basta: ninguém precisa lembrar de comando nenhum na mão
  * Feito por: Arthur Roberto Weege Pontes
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Data: 2026-09-11
  * Alterações:
  * - v1.0.0 (2026-09-11): Primeira versão
+ * - v1.1.0 (2026-09-11): SKIP_SEED=true pula o seed (o banco de teste começa vazio)
  *
  * Como rodar:
  *   npm run db:setup
@@ -110,6 +111,11 @@ function applyMigrations() {
 
 // Roda o seed, que precisa ser idempotente (upsert) pra rodar em todo `npm run dev`
 function runSeed() {
+  if (process.env.SKIP_SEED === "true") {
+    console.log("🌱 SKIP_SEED ligado, pulando o seed")
+    return
+  }
+
   if (!existsSync(SEED_FILE)) {
     console.log("🌱 Ainda não tem seed, pulando")
     return

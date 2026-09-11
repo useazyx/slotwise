@@ -1,10 +1,16 @@
 import { defineConfig } from "vitest/config"
 
+// No CI o banco de teste vem de fora; na máquina usa o Postgres padrão
+const TEST_DATABASE_URL =
+  process.env.TEST_DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/pontual_test?schema=public"
+
 export default defineConfig({
   test: {
+    globalSetup: ["./tests/global-setup.ts"],
     env: {
       NODE_ENV: "test",
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/pontual_test?schema=public",
+      DATABASE_URL: TEST_DATABASE_URL,
+      TEST_DATABASE_URL,
       JWT_SECRET: "test-secret-pontual",
       APP_TIMEZONE: "America/Sao_Paulo",
     },
