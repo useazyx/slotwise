@@ -1,4 +1,4 @@
-# Pontual
+# Slotwise
 
 API de agendamento para negócios que trabalham com horário marcado: barbearia, manicure, clínica.
 O prestador cadastra os serviços e a semana de atendimento, o cliente vê os horários livres e marca,
@@ -30,13 +30,13 @@ Se o seu usuário do Postgres não for `postgres/postgres`, ajuste o `DATABASE_U
 
 ### Contas de demonstração
 
-Todas com a senha `pontual123`.
+Todas com a senha `slotwise123`.
 
 | Papel      | E-mail             | O que tem                                         |
 |------------|--------------------|---------------------------------------------------|
-| Prestador  | `ze@pontual.dev`   | Barbearia, 3 serviços, de terça a sábado          |
-| Prestador  | `bela@pontual.dev` | Manicure, 3 serviços, de segunda a sexta          |
-| Cliente    | `ana@pontual.dev`  | Pode marcar com qualquer um dos dois              |
+| Prestador  | `ze@slotwise.dev`   | Barbearia, 3 serviços, de terça a sábado          |
+| Prestador  | `bela@slotwise.dev` | Manicure, 3 serviços, de segunda a sexta          |
+| Cliente    | `ana@slotwise.dev`  | Pode marcar com qualquer um dos dois              |
 
 ## Fluxo de marcação
 
@@ -79,5 +79,5 @@ npm test
 ```
 
 Os testes montam a aplicação com `buildApp()` e chamam pelo `app.inject()`, num banco
-`pontual_test` que o setup global cria e migra. Os workers ficam desligados nos testes; os handlers
+`slotwise_test` que o setup global cria e migra. Os workers ficam desligados nos testes; os handlers
 de lembrete e de agenda são chamados direto.

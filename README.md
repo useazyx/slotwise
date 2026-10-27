@@ -1,6 +1,6 @@
-# Pontual
+# Slotwise
 
-[![CI](https://github.com/useazyx/pontual/actions/workflows/ci.yml/badge.svg)](https://github.com/useazyx/pontual/actions/workflows/ci.yml)
+[![CI](https://github.com/useazyx/slotwise/actions/workflows/ci.yml/badge.svg)](https://github.com/useazyx/slotwise/actions/workflows/ci.yml)
 
 Scheduling API for businesses that work by appointment: barbershops, nail studios, clinics.
 Providers set their services and weekly hours, clients see the free slots and book one, and the
@@ -33,13 +33,13 @@ If your Postgres user isn't `postgres/postgres`, change `DATABASE_URL` in `.env`
 
 ### Demo accounts
 
-All of them use the password `pontual123`.
+All of them use the password `slotwise123`.
 
 | Role     | Email              | What's there                                        |
 |----------|--------------------|-----------------------------------------------------|
-| Provider | `ze@pontual.dev`   | Barbershop, 3 services, Tuesday to Saturday         |
-| Provider | `bela@pontual.dev` | Nail studio, 3 services, Monday to Friday           |
-| Client   | `ana@pontual.dev`  | Can book with either of them                        |
+| Provider | `ze@slotwise.dev`   | Barbershop, 3 services, Tuesday to Saturday         |
+| Provider | `bela@slotwise.dev` | Nail studio, 3 services, Monday to Friday           |
+| Client   | `ana@slotwise.dev`  | Can book with either of them                        |
 
 ## Booking flow
 
@@ -93,7 +93,7 @@ npm test
 ```
 
 The suites build the app with `buildApp()` and call it through `app.inject()`, against a
-`pontual_test` database that the global setup creates and migrates. Workers are off in tests; the
+`slotwise_test` database that the global setup creates and migrates. Workers are off in tests; the
 reminder and agenda handlers are called directly.
 
 ## Project structure
