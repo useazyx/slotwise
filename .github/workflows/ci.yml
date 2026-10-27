@@ -24,8 +24,8 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pontual?schema=public
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pontual_test?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/slotwise?schema=public
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/slotwise_test?schema=public
       JWT_SECRET: ci-only-secret-with-enough-length
 
     steps:

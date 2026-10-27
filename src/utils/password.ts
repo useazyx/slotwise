@@ -15,7 +15,7 @@ import bcrypt from "bcryptjs"
 const SALT_ROUNDS = 10
 
 // Hash de mentira pra comparar quando o e-mail nem existe (assim o login demora igual nos dois casos)
-export const DUMMY_PASSWORD_HASH = bcrypt.hashSync("pontual-senha-que-ninguem-usa", SALT_ROUNDS)
+export const DUMMY_PASSWORD_HASH = bcrypt.hashSync("slotwise-senha-que-ninguem-usa", SALT_ROUNDS)
 
 export const hashPassword = (plain: string): Promise<string> => bcrypt.hash(plain, SALT_ROUNDS)
 

@@ -1,5 +1,5 @@
 {
-  "name": "pontual-api",
+  "name": "slotwise-api",
   "version": "1.0.0",
   "description": "Scheduling API with background reminder jobs",
   "type": "module",

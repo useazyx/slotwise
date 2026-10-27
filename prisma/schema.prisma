@@ -1,4 +1,4 @@
-// schema.prisma - O mapa do banco do Pontual
+// schema.prisma - O mapa do banco do Slotwise
 // # Pra que serve?
 // - Descrever quem usa (clientes e prestadores), o que é oferecido e quando dá pra atender
 // - Guardar os agendamentos e os lembretes que a fila vai disparar

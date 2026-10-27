@@ -21,13 +21,13 @@ import { prisma } from "../src/config/prisma.js"
 import { hashPassword } from "../src/utils/password.js"
 import { timeToMinutes } from "../src/utils/time.js"
 
-export const DEMO_PASSWORD = "pontual123"
+export const DEMO_PASSWORD = "slotwise123"
 
 // Quem existe na demonstração, com os serviços e a semana de cada prestador
 const DEMO_PROVIDERS = [
   {
     name: "Barbearia do Zé",
-    email: "ze@pontual.dev",
+    email: "ze@slotwise.dev",
     services: [
       { name: "Corte masculino", duration_minutes: 30, price_cents: 4500 },
       { name: "Barba", duration_minutes: 20, price_cents: 3000 },
@@ -41,7 +41,7 @@ const DEMO_PROVIDERS = [
   },
   {
     name: "Studio Bela",
-    email: "bela@pontual.dev",
+    email: "bela@slotwise.dev",
     services: [
       { name: "Manicure", duration_minutes: 45, price_cents: 3500 },
       { name: "Pedicure", duration_minutes: 45, price_cents: 4000 },
@@ -52,7 +52,7 @@ const DEMO_PROVIDERS = [
   },
 ]
 
-const DEMO_CLIENTS = [{ name: "Ana Souza", email: "ana@pontual.dev" }]
+const DEMO_CLIENTS = [{ name: "Ana Souza", email: "ana@slotwise.dev" }]
 
 export async function seed() {
   const passwordHash = await hashPassword(DEMO_PASSWORD)
@@ -116,7 +116,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   seed()
     .then(() => {
       console.log(`🌱 Seed pronto. Logins com a senha "${DEMO_PASSWORD}":`)
-      console.log("   prestadores: ze@pontual.dev, bela@pontual.dev | cliente: ana@pontual.dev")
+      console.log("   prestadores: ze@slotwise.dev, bela@slotwise.dev | cliente: ana@slotwise.dev")
     })
     .catch((error) => {
       console.error("❌ Deu ruim no seed:", error)

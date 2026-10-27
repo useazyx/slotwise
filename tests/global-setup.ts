@@ -1,7 +1,7 @@
 /**
  * global-setup.ts - Prepara o banco de teste uma vez antes de todas as suítes
  * # Pra que serve?
- * - Criar o pontual_test se não existir e aplicar as migrações
+ * - Criar o slotwise_test se não existir e aplicar as migrações
  * - Reaproveitar o mesmo script do `npm run dev`, só que sem seed
  * Feito por: Arthur Roberto Weege Pontes
  * Versão: 1.0.0
@@ -13,7 +13,7 @@
 import { spawnSync } from "node:child_process"
 
 const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/pontual_test?schema=public"
+  process.env.TEST_DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/slotwise_test?schema=public"
 
 export default function setup() {
   const result = spawnSync("npx", ["tsx", "scripts/setup-db.ts"], {

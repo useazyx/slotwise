@@ -75,7 +75,7 @@ export async function buildApp({ rateLimit = env.NODE_ENV !== "test" }: BuildApp
   await app.register(swagger, {
     openapi: {
       info: {
-        title: "Pontual API",
+        title: "Slotwise API",
         description: "Agendamento com horários livres, proteção contra marcação dupla e lembretes em fila",
         version: "1.0.0",
       },

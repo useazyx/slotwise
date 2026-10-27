@@ -1,5 +1,5 @@
 /**
- * ListProvidersService.ts - A vitrine: lista quem atende pelo Pontual
+ * ListProvidersService.ts - A vitrine: lista quem atende pelo Slotwise
  * # Pra que serve?
  * - Mostrar os prestadores com a quantidade de serviços ativos de cada um
  * Feito por: Arthur Roberto Weege Pontes

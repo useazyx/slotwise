@@ -34,7 +34,7 @@ describe("demo seed", () => {
     const login = await app.inject({
       method: "POST",
       url: "/auth/login",
-      payload: { email: "ana@pontual.dev", password: DEMO_PASSWORD },
+      payload: { email: "ana@slotwise.dev", password: DEMO_PASSWORD },
     })
     const providers = await app.inject({ method: "GET", url: "/providers" })
 
